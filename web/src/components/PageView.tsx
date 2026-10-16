@@ -130,7 +130,7 @@ function LoadedPage({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <header className="flex h-12 shrink-0 items-center gap-3 px-6">
+      <header className="flex h-12 shrink-0 items-center gap-3 pl-12 pr-6 md:pl-6">
         <p className="min-w-0 flex-1 truncate text-sm text-muted-foreground">{trail.join("  /  ")}</p>
         {canEdit && (
           <>
