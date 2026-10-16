@@ -69,7 +69,7 @@ export function TopicPage() {
         <Button
           variant="ghost"
           size="icon-sm"
-          className="fixed left-2 top-6 z-20 -translate-y-1/2 md:hidden"
+          className="fixed left-2 top-2.5 z-20 md:hidden"
           aria-label="Contents"
           onClick={() => setNavOpen(!navOpen)}
         >
