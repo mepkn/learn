@@ -83,7 +83,7 @@ export function Editor({
     content: markdown,
     contentType: "markdown",
     editable,
-    editorProps: { attributes: { class: "prose min-h-[50vh] pb-[30vh]" } },
+    editorProps: { attributes: { class: "prose pb-16 [&[contenteditable=true]]:min-h-[50vh] [&[contenteditable=true]]:pb-[30vh]" } },
     onUpdate: ({ transaction }) => {
       if (transaction.docChanged) onChange();
     },
