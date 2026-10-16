@@ -49,6 +49,7 @@ function LoadedPage({
   const [editing, setEditing] = useState(initialDraft !== null);
   const [status, setStatus] = useState<Status>(initialDraft !== null ? "dirty" : "idle");
   const [restored, setRestored] = useState(initialDraft !== null);
+  const [scrolled, setScrolled] = useState(false);
   // Re-render the read-only view when the page changes elsewhere, never mid-edit.
   const [shown, setShown] = useState({ markdown: initialDraft ?? server.markdown, at: server.updatedAt, v: 0 });
   const baseline = useRef(server.markdown);
@@ -130,7 +131,12 @@ function LoadedPage({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <header className="flex h-12 shrink-0 items-center gap-3 pl-12 pr-6 md:pl-6">
+      <header
+        className={cn(
+          "flex h-12 shrink-0 items-center gap-3 border-b border-transparent pl-12 pr-6 transition-colors md:pl-6",
+          scrolled && "border-border",
+        )}
+      >
         <p className="min-w-0 flex-1 truncate text-sm text-muted-foreground">{trail.join("  /  ")}</p>
         {canEdit && (
           <>
@@ -155,7 +161,7 @@ function LoadedPage({
         )}
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto" onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 0)}>
         <article className="mx-auto w-full max-w-3xl px-6 pt-6 sm:px-10">
           {restored && (
             <p className="mb-6 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300">
