@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 
 export type MenuItem =
   | { label: string; icon?: ReactNode; hint?: string; danger?: boolean; onSelect: () => void }
+  | { swatches: { label: string; colors: { name: string; value: string | null }[]; onPick: (value: string | null) => void } }
   | "separator";
 
 export interface MenuState {
@@ -58,6 +59,27 @@ export function Menu({ state, onClose }: { state: MenuState | null; onClose: () 
       {state.items.map((item, i) =>
         item === "separator" ? (
           <div key={i} className="my-1 h-px bg-border" />
+        ) : "swatches" in item ? (
+          <div key={i} className="flex items-center gap-2 px-2 py-1.5">
+            <span className="flex-1 text-muted-foreground">{item.swatches.label}</span>
+            {item.swatches.colors.map((c) => (
+              <button
+                key={c.name}
+                role="menuitem"
+                title={c.name}
+                aria-label={`${item.swatches.label}: ${c.name}`}
+                className="size-4 rounded-full border border-border hover:scale-125"
+                style={{ background: c.value ?? undefined }}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  onClose();
+                  item.swatches.onPick(c.value);
+                }}
+              >
+                {!c.value && <span className="block text-[10px] leading-none text-muted-foreground">×</span>}
+              </button>
+            ))}
+          </div>
         ) : (
           <button
             key={i}

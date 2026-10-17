@@ -7,6 +7,9 @@ import TaskItem from "@tiptap/extension-task-item";
 import TaskList from "@tiptap/extension-task-list";
 import { TableKit } from "@tiptap/extension-table";
 import { BlockMath } from "@tiptap/extension-mathematics";
+import { BackgroundColor, Color } from "@tiptap/extension-text-style";
+import { FindAndReplace } from "@tiptap/extension-find-and-replace";
+import Typography from "@tiptap/extension-typography";
 import { Markdown } from "@tiptap/markdown";
 import { common, createLowlight } from "lowlight";
 import {
@@ -30,7 +33,9 @@ import {
 } from "lucide-react";
 import { Menu, type MenuItem, type MenuState } from "@/components/Menu";
 import { LinkDialog } from "@/components/editor/LinkDialog";
+import { FindBar } from "@/components/editor/FindBar";
 import { MathDialog, type MathEdit } from "@/components/editor/MathDialog";
+import { MarkdownTextStyle } from "@/components/editor/textStyle";
 import { StrictInlineMath } from "@/components/editor/math";
 import { mod } from "@/lib/keys";
 
@@ -71,6 +76,7 @@ export function Editor({
   const [menu, setMenu] = useState<MenuState | null>(null);
   const [linkOpen, setLinkOpen] = useState(false);
   const [math, setMath] = useState<MathEdit | null>(null);
+  const [finding, setFinding] = useState(false);
   // Captured once by the editor, so it asks the DOM whether editing is on.
   const editMath = (block: boolean) => (node: { attrs: Record<string, unknown> }, pos: number) => {
     if (document.querySelector(".ProseMirror[contenteditable=true]"))
@@ -89,6 +95,26 @@ export function Editor({
       TableKit.configure({ table: { resizable: false } }),
       StrictInlineMath.configure({ onClick: editMath(false), katexOptions: { throwOnError: false } }),
       BlockMath.configure({ onClick: editMath(true), katexOptions: { throwOnError: false } }),
+      MarkdownTextStyle,
+      Color,
+      BackgroundColor,
+      FindAndReplace,
+      // Only rules that can't mangle code typed before its closing backtick
+      // ("use client", --save, ...props, a != b, 0x10, x^2 all stay as typed).
+      Typography.configure({
+        emDash: false,
+        ellipsis: false,
+        openDoubleQuote: false,
+        closeDoubleQuote: false,
+        openSingleQuote: false,
+        closeSingleQuote: false,
+        notEqual: false,
+        laquo: false,
+        raquo: false,
+        multiplication: false,
+        superscriptTwo: false,
+        superscriptThree: false,
+      }),
       Placeholder.configure({ placeholder: `Start writing… markdown works as you type. ${mod}+/ for shortcuts.` }),
       Markdown,
     ],
@@ -105,6 +131,20 @@ export function Editor({
     editor?.setEditable(editable, false);
     if (editable) editor?.commands.focus("end");
   }, [editor, editable]);
+
+  // Ctrl/⌘ F opens the find bar instead of the browser's find.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "f" && !document.querySelector("[role=dialog]")) {
+        e.preventDefault();
+        setFinding(true);
+        const input = document.querySelector<HTMLInputElement>("[data-find-input]");
+        input?.select();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   useImperativeHandle(
     ref,
@@ -134,6 +174,7 @@ export function Editor({
         if (!editable && a?.href) window.open(a.href, "_blank", "noopener");
       }}
     >
+      {finding && <FindBar editor={editor} editable={editable} onClose={() => setFinding(false)} />}
       <EditorContent editor={editor} />
       <MathDialog
         edit={math}
@@ -171,10 +212,39 @@ export function Editor({
   );
 }
 
+// Mid tones and translucent highlights, readable in light and dark mode.
+const TEXT_COLORS = [
+  { name: "Default", value: null },
+  { name: "Red", value: "#dc2626" },
+  { name: "Orange", value: "#ea580c" },
+  { name: "Green", value: "#16a34a" },
+  { name: "Blue", value: "#2563eb" },
+  { name: "Purple", value: "#9333ea" },
+];
+const HIGHLIGHTS = [
+  { name: "None", value: null },
+  { name: "Yellow", value: "rgba(250, 204, 21, 0.35)" },
+  { name: "Green", value: "rgba(34, 197, 94, 0.3)" },
+  { name: "Blue", value: "rgba(59, 130, 246, 0.3)" },
+  { name: "Pink", value: "rgba(236, 72, 153, 0.3)" },
+  { name: "Gray", value: "rgba(120, 120, 120, 0.25)" },
+];
+
 function formatItems(editor: TiptapEditor, openLink: () => void, openMath: () => void): MenuItem[] {
   const c = () => editor.chain().focus();
   const items: MenuItem[] = [];
   if (!editor.state.selection.empty) {
+    items.push(
+      { swatches: { label: "Colour", colors: TEXT_COLORS, onPick: (v) => (v ? c().setColor(v) : c().unsetColor()).run() } },
+      {
+        swatches: {
+          label: "Highlight",
+          colors: HIGHLIGHTS,
+          onPick: (v) => (v ? c().setBackgroundColor(v) : c().unsetBackgroundColor()).run(),
+        },
+      },
+      "separator",
+    );
     items.push(
       { label: "Bold", icon: <Bold />, hint: `${mod}B`, onSelect: () => c().toggleBold().run() },
       { label: "Italic", icon: <Italic />, hint: `${mod}I`, onSelect: () => c().toggleItalic().run() },

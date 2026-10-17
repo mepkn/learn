@@ -10,6 +10,7 @@ const groups: { title: string; rows: [string, string][] }[] = [
       [`${mod} S`, "Save"],
       ["Esc", "Save and go back to view mode"],
       [`${mod} K`, "Find a page"],
+      [`${mod} F`, "Find (and replace, while editing) in this page"],
       [`${mod} /`, "This help"],
     ],
   },
@@ -35,12 +36,14 @@ const groups: { title: string; rows: [string, string][] }[] = [
       [`${mod} B / I / U`, "Bold / italic / underline"],
       [`${mod} E`, "Inline code"],
       ["Paste a URL", "Link (on selected text too)"],
+      ["$$x^2$$", "Equation ($$$x$$$ on its own line)"],
+      ["-> <- (c) (tm) 1/2 +/-", "→ ← © ™ ½ ±"],
     ],
   },
   {
     title: "More",
     rows: [
-      ["Right-click", "Format menu, links, tables"],
+      ["Right-click", "Format menu, colours, links, tables"],
       ["Tab / ⇧Tab", "Indent / outdent list item"],
       [`${mod} Z / ${mod} ⇧Z`, "Undo / redo"],
     ],
