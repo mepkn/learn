@@ -42,6 +42,7 @@ import { LinkDialog } from "@/components/editor/LinkDialog";
 import { FindBar } from "@/components/editor/FindBar";
 import { MathDialog, type MathEdit } from "@/components/editor/MathDialog";
 import { MarkdownTextStyle } from "@/components/editor/textStyle";
+import { MarkdownPaste } from "@/components/editor/markdownPaste";
 import { StrictInlineMath } from "@/components/editor/math";
 import { renderD2 } from "@/lib/d2";
 import { mod } from "@/lib/keys";
@@ -187,6 +188,7 @@ export function Editor({
       }),
       Placeholder.configure({ placeholder: `Start writing… markdown works as you type. ${mod}+/ for shortcuts.` }),
       Markdown,
+      MarkdownPaste,
     ],
     content: markdown,
     contentType: "markdown",
