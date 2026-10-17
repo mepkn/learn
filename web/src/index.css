@@ -190,3 +190,14 @@
 .dark .hljs-name, .dark .hljs-tag, .dark .hljs-selector-id, .dark .hljs-selector-class { color: #fda4af; }
 .dark .hljs-attribute, .dark .hljs-type, .dark .hljs-params { color: #fde68a; }
 .dark .hljs-deletion { color: #fca5a5; }
+
+/* ```d2 blocks: source above the diagram while editing, diagram only when viewing. */
+.d2-diagram { margin-top: 0.5em; overflow-x: auto; text-align: center; }
+.d2-diagram:empty::before { content: "Rendering diagram…"; font-size: 0.85em; color: var(--muted-foreground); }
+.d2-diagram svg { display: inline-block; max-width: 100%; height: auto; }
+.d2-diagram.d2-error { text-align: left; font-family: var(--font-mono); font-size: 0.8em; color: var(--destructive); white-space: pre-wrap; }
+.prose[contenteditable="false"] .d2-block:has(.d2-diagram svg) pre { display: none; }
+.prose[contenteditable="false"] .d2-block .d2-diagram { margin-top: 0; }
+.d2-diagram .d2-dark { display: none; }
+.dark .d2-diagram .d2-dark { display: inline-block; }
+.dark .d2-diagram .d2-light { display: none; }

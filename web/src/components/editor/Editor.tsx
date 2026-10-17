@@ -37,11 +37,13 @@ import { FindBar } from "@/components/editor/FindBar";
 import { MathDialog, type MathEdit } from "@/components/editor/MathDialog";
 import { MarkdownTextStyle } from "@/components/editor/textStyle";
 import { StrictInlineMath } from "@/components/editor/math";
+import { renderD2 } from "@/lib/d2";
 import { mod } from "@/lib/keys";
 
 const lowlight = createLowlight(common);
 
 // Puts the language on <pre> too, so CSS can label the block ("jsx", "ts"...).
+// ```d2 blocks also show the diagram; view mode hides their source.
 const CodeBlock = CodeBlockLowlight.extend({
   renderHTML({ node, HTMLAttributes }) {
     const language = node.attrs.language as string | null;
@@ -50,6 +52,62 @@ const CodeBlock = CodeBlockLowlight.extend({
       { "data-language": language ?? "" },
       ["code", mergeAttributes(HTMLAttributes, { class: language ? `language-${language}` : null }), 0],
     ];
+  },
+  addNodeView() {
+    return ({ node: initial }) => {
+      let node = initial;
+      const dom = document.createElement("div");
+      const pre = document.createElement("pre");
+      const code = document.createElement("code");
+      const diagram = document.createElement("div");
+      diagram.className = "d2-diagram";
+      diagram.contentEditable = "false";
+      pre.append(code);
+      dom.append(pre, diagram);
+
+      let drawn = "";
+      let timer = 0;
+      const draw = () => {
+        const isD2 = node.attrs.language === "d2";
+        dom.className = isD2 ? "d2-block" : "";
+        diagram.hidden = !isD2;
+        if (!isD2 || node.textContent === drawn) return;
+        const source = (drawn = node.textContent);
+        window.clearTimeout(timer);
+        timer = window.setTimeout(() => {
+          renderD2(source).then(
+            (svg) => source === drawn && (diagram.innerHTML = svg),
+            (err: unknown) => {
+              if (source !== drawn) return;
+              diagram.textContent = err instanceof Error ? err.message : String(err);
+              diagram.classList.add("d2-error");
+            },
+          );
+          diagram.classList.remove("d2-error");
+        }, diagram.innerHTML ? 400 : 0);
+      };
+      const sync = () => {
+        const language = node.attrs.language as string | null;
+        pre.dataset.language = language ?? "";
+        code.className = language ? `language-${language}` : "";
+        draw();
+      };
+      sync();
+
+      return {
+        dom,
+        contentDOM: code,
+        update: (next) => {
+          if (next.type !== node.type) return false;
+          node = next;
+          sync();
+          return true;
+        },
+        ignoreMutation: (m) => diagram.contains(m.target),
+        stopEvent: (e) => diagram.contains(e.target as globalThis.Node),
+        destroy: () => window.clearTimeout(timer),
+      };
+    };
   },
 });
 

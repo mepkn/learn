@@ -23,6 +23,7 @@ const groups: { title: string; rows: [string, string][] }[] = [
       ["[ ] ", "Checklist"],
       ["> ", "Quote"],
       ["```js ", "Code block (any language)"],
+      ["```d2 ", "D2 diagram (source shows while editing)"],
       ["---", "Divider"],
     ],
   },
