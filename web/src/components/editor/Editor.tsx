@@ -1,5 +1,11 @@
 import { useEffect, useImperativeHandle, useState, type Ref } from "react";
-import { EditorContent, mergeAttributes, useEditor, type Editor as TiptapEditor } from "@tiptap/react";
+import {
+  EditorContent,
+  mergeAttributes,
+  textblockTypeInputRule,
+  useEditor,
+  type Editor as TiptapEditor,
+} from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -45,6 +51,12 @@ const lowlight = createLowlight(common);
 // Puts the language on <pre> too, so CSS can label the block ("jsx", "ts"...).
 // ```d2 blocks also show the diagram; view mode hides their source.
 const CodeBlock = CodeBlockLowlight.extend({
+  // Tiptap's own rules accept only [a-z] after the fence, so ```d2 never fired.
+  addInputRules() {
+    return [/^```([a-z0-9+#-]+)?[\s\n]$/, /^~~~([a-z0-9+#-]+)?[\s\n]$/].map((find) =>
+      textblockTypeInputRule({ find, type: this.type, getAttributes: (match) => ({ language: match[1] }) }),
+    );
+  },
   renderHTML({ node, HTMLAttributes }) {
     const language = node.attrs.language as string | null;
     return [
