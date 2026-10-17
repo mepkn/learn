@@ -16,6 +16,8 @@ export default defineConfig({
       { find: "@convex", replacement: path.resolve(import.meta.dirname, "../backend/convex") },
       // KaTeX loads only when a page shows an equation (see src/lib/katex-lazy.ts).
       { find: /^katex$/, replacement: path.resolve(import.meta.dirname, "./src/lib/katex-lazy.ts") },
+      // Only needed for regex find, which isn't used (see src/lib/re2js-stub.ts).
+      { find: /^re2js$/, replacement: path.resolve(import.meta.dirname, "./src/lib/re2js-stub.ts") },
     ],
     dedupe: ["convex", "react", "react-dom"],
   },
