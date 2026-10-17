@@ -95,12 +95,12 @@
 /* Page content: identical in view and edit mode, so switching never shifts. */
 .prose {
   font-size: 1rem;
-  line-height: 1.75;
+  line-height: 1.6;
   color: var(--foreground);
   outline: none;
   word-wrap: break-word;
 }
-.prose > * + * { margin-top: 0.9em; }
+.prose > * + * { margin-top: 0.6em; }
 .prose h1, .prose h2, .prose h3, .prose h4 {
   font-weight: 650;
   line-height: 1.3;
