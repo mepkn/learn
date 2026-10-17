@@ -8,7 +8,6 @@ import TaskList from "@tiptap/extension-task-list";
 import { TableKit } from "@tiptap/extension-table";
 import { BlockMath } from "@tiptap/extension-mathematics";
 import { Markdown } from "@tiptap/markdown";
-import "katex/dist/katex.min.css";
 import { common, createLowlight } from "lowlight";
 import {
   Bold,

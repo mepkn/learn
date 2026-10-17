@@ -11,10 +11,12 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   envDir: path.resolve(import.meta.dirname, "../backend"),
   resolve: {
-    alias: {
-      "@": path.resolve(import.meta.dirname, "./src"),
-      "@convex": path.resolve(import.meta.dirname, "../backend/convex"),
-    },
+    alias: [
+      { find: "@", replacement: path.resolve(import.meta.dirname, "./src") },
+      { find: "@convex", replacement: path.resolve(import.meta.dirname, "../backend/convex") },
+      // KaTeX loads only when a page shows an equation (see src/lib/katex-lazy.ts).
+      { find: /^katex$/, replacement: path.resolve(import.meta.dirname, "./src/lib/katex-lazy.ts") },
+    ],
     dedupe: ["convex", "react", "react-dom"],
   },
 })
