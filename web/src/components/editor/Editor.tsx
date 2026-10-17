@@ -6,7 +6,9 @@ import Placeholder from "@tiptap/extension-placeholder";
 import TaskItem from "@tiptap/extension-task-item";
 import TaskList from "@tiptap/extension-task-list";
 import { TableKit } from "@tiptap/extension-table";
+import { BlockMath } from "@tiptap/extension-mathematics";
 import { Markdown } from "@tiptap/markdown";
+import "katex/dist/katex.min.css";
 import { common, createLowlight } from "lowlight";
 import {
   Bold,
@@ -22,12 +24,15 @@ import {
   Minus,
   Quote,
   SquareCode,
+  Sigma,
   Strikethrough,
   Table,
   Trash2,
 } from "lucide-react";
 import { Menu, type MenuItem, type MenuState } from "@/components/Menu";
 import { LinkDialog } from "@/components/editor/LinkDialog";
+import { MathDialog, type MathEdit } from "@/components/editor/MathDialog";
+import { StrictInlineMath } from "@/components/editor/math";
 import { mod } from "@/lib/keys";
 
 const lowlight = createLowlight(common);
@@ -66,6 +71,12 @@ export function Editor({
 }) {
   const [menu, setMenu] = useState<MenuState | null>(null);
   const [linkOpen, setLinkOpen] = useState(false);
+  const [math, setMath] = useState<MathEdit | null>(null);
+  // Captured once by the editor, so it asks the DOM whether editing is on.
+  const editMath = (block: boolean) => (node: { attrs: Record<string, unknown> }, pos: number) => {
+    if (document.querySelector(".ProseMirror[contenteditable=true]"))
+      setMath({ latex: String(node.attrs.latex ?? ""), block, pos });
+  };
 
   const editor = useEditor({
     extensions: [
@@ -77,6 +88,8 @@ export function Editor({
       TaskList,
       TaskItem.configure({ nested: true }),
       TableKit.configure({ table: { resizable: false } }),
+      StrictInlineMath.configure({ onClick: editMath(false), katexOptions: { throwOnError: false } }),
+      BlockMath.configure({ onClick: editMath(true), katexOptions: { throwOnError: false } }),
       Placeholder.configure({ placeholder: `Start writing… markdown works as you type. ${mod}+/ for shortcuts.` }),
       Markdown,
     ],
@@ -110,7 +123,11 @@ export function Editor({
       onContextMenu={(e) => {
         if (!editable) return;
         e.preventDefault();
-        setMenu({ x: e.clientX, y: e.clientY, items: formatItems(editor, () => setLinkOpen(true)) });
+        setMenu({
+          x: e.clientX,
+          y: e.clientY,
+          items: formatItems(editor, () => setLinkOpen(true), () => setMath({ latex: "", block: false, pos: null })),
+        });
       }}
       onClick={(e) => {
         // In view mode, links open in a new tab.
@@ -119,6 +136,24 @@ export function Editor({
       }}
     >
       <EditorContent editor={editor} />
+      <MathDialog
+        edit={math}
+        onClose={() => {
+          setMath(null);
+          editor.commands.focus();
+        }}
+        onSubmit={(latex) => {
+          if (!math) return;
+          const c = editor.chain().focus();
+          if (math.pos === null) {
+            if (latex) c.insertInlineMath({ latex }).run();
+          } else if (math.block) {
+            (latex ? c.updateBlockMath({ latex, pos: math.pos }) : c.deleteBlockMath({ pos: math.pos })).run();
+          } else {
+            (latex ? c.updateInlineMath({ latex, pos: math.pos }) : c.deleteInlineMath({ pos: math.pos })).run();
+          }
+        }}
+      />
       <Menu state={menu} onClose={() => setMenu(null)} />
       <LinkDialog
         open={linkOpen}
@@ -137,7 +172,7 @@ export function Editor({
   );
 }
 
-function formatItems(editor: TiptapEditor, openLink: () => void): MenuItem[] {
+function formatItems(editor: TiptapEditor, openLink: () => void, openMath: () => void): MenuItem[] {
   const c = () => editor.chain().focus();
   const items: MenuItem[] = [];
   if (!editor.state.selection.empty) {
@@ -159,6 +194,7 @@ function formatItems(editor: TiptapEditor, openLink: () => void): MenuItem[] {
     { label: "Checklist", icon: <ListChecks />, hint: "[ ]", onSelect: () => c().toggleTaskList().run() },
     { label: "Quote", icon: <Quote />, hint: ">", onSelect: () => c().toggleBlockquote().run() },
     { label: "Code block", icon: <SquareCode />, hint: "```", onSelect: () => c().toggleCodeBlock().run() },
+    { label: "Equation…", icon: <Sigma />, hint: "$$", onSelect: openMath },
     { label: "Divider", icon: <Minus />, hint: "---", onSelect: () => c().setHorizontalRule().run() },
   );
   if (editor.isActive("table")) {
